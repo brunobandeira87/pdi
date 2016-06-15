@@ -139,20 +139,20 @@ public class PDI {
 	    int total = image.length * image[0].length;
 	    int lowestPixel = (int) getLowestPixel(image);
 	    int highestPixel = (int) getHighestPixel(image);
-	    //probabilidade do grupo B
-	    int wB = 0;
-	    //probabilidade do grupo F
-	    int wF = 0;
+	    //probabilidade do grupo 0
+	    int w0 = 0;
+	    //probabilidade do grupo 1
+	    int w1 = 0;
 	    
 	    
 	    int threshold = 0;
 	    
 	    double sum = 0;
-	    double sumB = 0;
-	    //media do grupo B
-	    double mB = 0;
-	    //media do grupo F
-	    double mF = 0;
+	    double sum0 = 0;
+	    //media do grupo 0
+	    double m0 = 0;
+	    //media do grupo 1
+	    double m1 = 0;
 	    double varMax = 0;
 	    double varianceBetweenClasses = 0.0;
 	    
@@ -162,17 +162,19 @@ public class PDI {
 	 
 	 
 	    for(int i=0 ; i<256 ; i++) {
-	        wB += histogram[i];
-	        if(wB == 0) continue;
-	        wF = total - wB;
+	        w0 += histogram[i];
+	        
+	        if(w0 == 0) continue;
+	        // calculo da probabilidade do grupo 1
+	        w1 = total - w0;
 	        // condição de parada, pois não há mais dois grupos
-	        if(wF == 0) break;
+	        if(w1 == 0) break;
 	 
-	        sumB += (double) (i * histogram[i]);
-	        mB = sumB / wB;
-	        mF = (sum - sumB) / wF;
+	        sum0 += (double) (i * histogram[i]);
+	        m0 = sum0 / w0;
+	        m1 = (sum - sum0) / w1;
 	 
-	        varianceBetweenClasses = (double) wB * (double) wF * (mB - mF) * (mB - mF);
+	        varianceBetweenClasses = (double) w0 * (double) w1 * (m0 - m1) * (m0 - m1);
 	 
 	        if(varianceBetweenClasses > varMax) {
 	            varMax = varianceBetweenClasses;

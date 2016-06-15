@@ -5,8 +5,8 @@ public class PDITeste {
 
 	public static void main(String[] args) {
 		
-		String path = "/home/bandeira/Documents/university/2016.1/pdi/workspace/DocumentBinary/src/images/";
-		String filename = "H10";
+		String path = "";
+		String filename = "";
 		String inputExt = ".png";
 		String outputExt = ".jpg";
 				
