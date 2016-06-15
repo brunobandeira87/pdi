@@ -186,35 +186,85 @@ public class PDI {
 	 
 	}
 	
+	private static double getDesvioPadrao(double[][] subImage, double avg){
+		//TODO implementar o desvio padrao
+		double ret = 0.0;
+		//double avg = getAvarage(subImage);
+		for (int i = 0; i < subImage.length; i++) {
+			for (int j = 0; j < subImage[0].length; j++) {
+				ret += Math.pow((subImage[i][j] - avg),2);
+			}
+		}
+		ret /= ((subImage.length * subImage[0].length) + 1); 
+		return Math.sqrt(ret);
+	}
 	
-	public static int niblackMethod(double[][] image, int radius){
-		int threshold = 0;
-		double[][] window = new double[2 * radius + 1][2 * radius + 1];
+	private static double getAvarage(double[][] subImage){
+		 
+		double ret = 0.0;
 		
+		
+		for (int i = 0; i < subImage.length; i++) {
+			for (int j = 0; j < subImage[0].length; j++) {
+				ret += subImage[i][j];
+			}
+		}
+		ret /= (subImage.length * subImage[0].length);
+		return ret;
+	}
+	
+	private static double[][] createWhiteImage(int width, int height){
+		double[][] ret = new double[width][height];
+		
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				ret[i][j] = 255;
+			}
+		}
+		
+		return ret;
+	}
+	
+	
+	public static double[][] niblackMethod(double[][] image, int radius){
+		System.out.println(System.currentTimeMillis());
+		System.out.println("Starting Niblack. Radius = " + radius);
+		//double[][] ret = new double[image.length][image[0].length];
+		double[][] ret = createWhiteImage(image.length, image[0].length);
+		double[][] window = new double[2 * radius + 1][2 * radius + 1];
+		double min = 0;
+		double max = 255;
+		double kt = -0.2;
 		for (int i = radius; i < image.length - radius; i++) {
 			for (int j = radius; j < image[0].length - radius; j++) {
-				int linha = 0;
-				int coluna = 0;
-				for (int k = i; k < i + window.length; k++) {
-					for (int l = j; l < j + window[0].length; l++) {
-						window[linha][coluna] = image[k+i][l+j];
-						coluna++;
+				//int linha = 0;
+				//int coluna = 0;
+				for (int k = 0; k < window.length; k++) {
+					for (int l = 0; l < window[0].length; l++) {
+						if(k + i < image.length - radius && l + j < image[0].length - radius)
+							window[k][l] = image[k+i][l+j];
+						//coluna++;
 					}
-					linha++;
+					//linha++;
+					double avg = getAvarage(window);
+					double desvio = getDesvioPadrao(window, avg);
+					double threshold = avg + kt * desvio;
+					ret[i][j] = (image[i][j] >= threshold) ?   max :  min;
 					
 				}
 				
-				//break;
+				
 			}
-			//break;
+			
 		}
-		
-		return threshold;
+		System.out.println("DONE!");
+		return ret;
 	}
 	
 	public static double[][] binaryImage(double[][] image){
 		int threshold = otsuMethod(image);
-		double[][] ret = new double[image.length][image[0].length];
+		//double[][] ret = new double[image.length][image[0].length];
+		double[][] ret = createWhiteImage(image.length, image[0].length);
 		double min = 0;
 		double max = 255;
 		for (int i = 0; i < image.length; i++) {
