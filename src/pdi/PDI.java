@@ -187,7 +187,7 @@ public class PDI {
 	}
 	
 	private static double getDesvioPadrao(double[][] subImage, double avg){
-		//TODO implementar o desvio padrao
+	
 		double ret = 0.0;
 		//double avg = getAvarage(subImage);
 		for (int i = 0; i < subImage.length; i++) {
@@ -258,6 +258,12 @@ public class PDI {
 			
 		}
 		System.out.println("DONE!");
+		return ret;
+	}
+	
+	
+	public static double[][] savoula(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];
 		return ret;
 	}
 	
