@@ -303,8 +303,35 @@ public class PDI {
 		return ret;
 	}
 	
+	private static double[][] normalization(double[][] image, double[][] background){
+		double[][] ret = new double[image.length][image[0].length];
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (double)(image[i][j] + 1) / (background[i][j] + 1);
+			}
+		}
+		
+		
+		return ret;
+	}
 	
-	
+	public static double[][] imageNormalization(double[][] image, double[][] background){
+		double iMax = getHighestPixel(image);
+		double iMin = getLowestPixel(image);
+		double[][] normalized = normalization(image, background);
+		double fMax = getHighestPixel(normalized);
+		double fMin = getLowestPixel(normalized);
+		double[][] ret = new double[image.length][image[0].length];
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (iMax - iMin) * ((normalized[i][j] - fMin)/(fMax - fMin)) + iMin;  
+			}
+		}
+		
+		return ret;
+	}
 	
 	
 	/*
@@ -354,108 +381,138 @@ public class PDI {
 		}
 		return ret;
 	}
+
 	
 	public static double[][] inpainting(double[][] image, double[][] mask){
-		//FIXME
+
 		
-		/**
-		 * TA MEIO ESCROTO ESSA PORRA AQUI! ELE TEM QUE FAZER 4 ITERACOES
-		 * 
-		 * EDCB, EDBC, DECB, DEBC
-		 */
 		
-		System.out.println("begin!");
-		printTime();
+		System.out.println("Background Estimation has begun!: " + printTime());
+		
+		
 		int radius = 3;
-		int height = image.length;
-		int width = image[0].length;
+		int height = image[0].length;
+		int width = image.length;
 		
-		System.out.println(width); //coluna
-		System.out.println(height); // linha
-		 
+		/*
+		int height = 8;
+		int width = 9;
+		System.out.println(image.length); //coluna
+		System.out.println(image[0].length); // linha
+		System.out.println(); 
+		System.out.println(mask.length); //coluna
+		System.out.println(mask[0].length); // linha
+		 */
 		double[][] tempImage = new double[image.length][image[0].length];
-		int[] ystart = {radius,radius, height - radius, height - radius};
-		int[] yend = {height - radius, height - radius, radius, radius};
+		int[] xstart = {radius, radius, height - radius, height - radius};
+		int[] xend = {height - radius, height - radius, radius, radius};
 		
-		int[] xstart = {radius, width - radius, radius, width - radius};
-		int[] xend = {width - radius, radius, width - radius, radius};
+		int[] ystart = {radius, width - radius, radius, width - radius};
+		int[] yend = {width - radius, radius, width - radius, radius};
 		int step = 0;
 	
 		
 		double[][] background = new double[image.length][image[0].length];		
-		for (int i = 0; i < background.length; i++) {
-			for (int j = 0; j < background[0].length; j++) {
-				background[i][j] = Double.MAX_VALUE; 
+		for (int l = 0; l < background.length; l++) {
+			for (int k = 0; k < background[0].length; k++) {
+				background[l][k] = Double.MAX_VALUE; 
 			}
 		}
 		
-		double[][] binary = PDI.binaryImage(mask);
-		
-		do{
-			double[][] tempMask = binary.clone();			
-			//double[][] tempMask = new double[mask.length][mask[0].length];
-			
-			//System.out.println(xstart[step] + " " + xend[step]);
-			//System.out.println(ystart[step] + " " + yend[step]);
-					
-			
-			int i = ystart[step];
-			int j;
-			while(true) {
+		//double[][] binary = PDI.binaryImage(mask);
+		double[][] tempMask = mask.clone();
+		for (int i = radius; i < background.length - radius; i++) {
+			for (int j = radius; j < background[0].length - radius; j++) {
+				if(tempMask[i][j] == 0){
 				
-				if((i > yend[step] && (step == 0 || step == 1) ) || (i <= yend[step] && (step == 2 || step == 3))){
-					System.out.println("morre");
-					break;
+				double x1 = image[i][j-1] * tempMask[i][j-1] ;
+				double x2 = image[i-1][j] * tempMask[i-1][j];						
+				double x3 = image[i][j+1] * tempMask[i][j+1];				
+				double x4 = image[i+1][j] * tempMask[i+1][j];
+				
+				double avg = (double)(x1 + x2 + x3 + x4)/(4);
+				
+				
+				tempImage[i][j] = avg;
+				if(avg < background[i][j]){
+					
+					background[i][j] = avg;
 				}
-				
-				if(step == 0 || step == 2)
-					j = xstart[0];
-				else
-					j = xstart[1];
-				
-				
-				
-				while (true) {
-					if( (j > xend[step] && (step == 0 || step == 2) || (j <= xend[step] && (step == 1 || step == 3))) ){
-						
-						//System.out.println("ola");
-						break;
-					}
-					//System.out.println(j);
-					
-					if(tempMask[i][j] == 0){
-						//System.out.println(step + ": " + i + "\t" + j);	
-						double avg = (double)(image[i-1][j] * tempMask[i-1][j] + image[i][j-1] * tempMask[i][j-1] +  image[i+1][j] * tempMask[i+1][j] +  image[i][j+1] * tempMask[i][j+1])/(4);
-						//System.out.println(avg);
-						tempImage[i][j] = avg;
-						if(avg < background[i][j]){
-							
-							background[i][j] = avg;
-						}
-						tempMask[i][j] = 1;
-					}
-					j = (step == 0|| step == 2) ? j + 1 : j - 1;
-					
-					//System.out.println(i + "\t" + j);
-				
-					
+				tempMask[i][j] = 1;
 				}
-				
-				
-				
-				i = (step == 0 || step == 1) ? i + 1 : i - 1;
 			}
-				
-			
-			
-			step++;
-		}while(step < 4);
+		}
 		
-		System.out.println("edn!");
-		printTime();
-		
+		tempMask = mask.clone();
+		for (int i = radius; i < background.length - radius; i++) {
+			for (int j = background[0].length - radius; j > 0; j--) {
+				if(tempMask[i][j] == 0){
+					
+					double x1 = image[i][j-1] * tempMask[i][j-1] ;
+					double x2 = image[i-1][j] * tempMask[i-1][j];						
+					double x3 = image[i][j+1] * tempMask[i][j+1];				
+					double x4 = image[i+1][j] * tempMask[i+1][j];
+					double avg = (double)(x1 + x2 + x3 + x4)/(4);
+					
+					
+					tempImage[i][j] = avg;
+					if(avg < background[i][j]){
+						
+						background[i][j] = avg;
+					}
+					tempMask[i][j] = 1;
+					}
+			}
+		}
+		tempMask = mask.clone();
+		for (int i = background.length - radius; i > 0; i--) {
+			for (int j = radius; j < background[0].length - radius; j++) {
+				if(tempMask[i][j] == 0){
+					
+					double x1 = image[i][j-1] * tempMask[i][j-1] ;
+					double x2 = image[i-1][j] * tempMask[i-1][j];						
+					double x3 = image[i][j+1] * tempMask[i][j+1];				
+					double x4 = image[i+1][j] * tempMask[i+1][j];
+					
+					double avg = (double)(x1 + x2 + x3 + x4)/(4);
+					
+					
+					tempImage[i][j] = avg;
+					if(avg < background[i][j]){
+						
+						background[i][j] = avg;
+					}
+					tempMask[i][j] = 1;
+					}
+			}
+		}
+		tempMask = mask.clone();
+		for (int i = background.length - radius; i > 0; i--) {
+			for (int j = background[0].length - radius; j > 0; j--) {
+				if(tempMask[i][j] == 0){
+					
+					double x1 = image[i][j-1] * tempMask[i][j-1] ;
+					double x2 = image[i-1][j] * tempMask[i-1][j];						
+					double x3 = image[i][j+1] * tempMask[i][j+1];				
+					double x4 = image[i+1][j] * tempMask[i+1][j];
+					
+					double avg = (double)(x1 + x2 + x3 + x4)/(4);
+					
+					
+					tempImage[i][j] = avg;
+					if(avg < background[i][j]){
+						
+						background[i][j] = avg;
+					}
+					tempMask[i][j] = 1;
+					}
+			}
+		}
+		System.out.println("Background Estimation has finished!: " + printTime());
 		return background;
 		
+	
+	
 	}
 	
 	public static int otsuMethod(double[][] image) {
@@ -522,9 +579,9 @@ public class PDI {
 	 */
 	
 	public static double[][] niblackMethod(double[][] image, int radius, boolean inverse){
-		printTime();
+		
 
-		System.out.println("Starting Niblack. Radius = " + radius);
+		System.out.println("Niblack has begun! Radius: "+  radius +" " + printTime());
 		//double[][] ret = new double[image.length][image[0].length];
 		double[][] ret = createWhiteImage(image.length, image[0].length);
 		double[][] window = new double[2 * radius + 1][2 * radius + 1];
@@ -556,7 +613,7 @@ public class PDI {
 		if(inverse){
 			ret = inverse(ret);
 		}
-		System.out.println("DONE!");
+		System.out.println("Niblack has finished! Radius: "+  radius +" " + printTime());
 		printTime();
 		return ret;
 	}
@@ -707,10 +764,10 @@ public static double[][] medianFilter(double[][] image, int radius){
 	 * BEGIN OF UTILS FUNCTIONS
 	 */
 	
-	private static void printTime(){
+	private static String printTime(){
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
-		System.out.println(dateFormat.format(date)); //2014/08/06 15:59:48
+		return (dateFormat.format(date)); //2014/08/06 15:59:48
 	}
 
 }
