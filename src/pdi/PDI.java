@@ -2,11 +2,20 @@ package pdi;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 
 public class PDI {
 
+	/*
+	 * BEGIN OF READ IMAGE FILE
+	 */
+	
 	public static double[][] lerImagem(String caminho) throws RuntimeException {
 		File f = new File(caminho);
 		BufferedImage image;
@@ -116,6 +125,27 @@ public class PDI {
 		return lerImagem(image);
 	}
 	
+	/*
+	 * END OF READ/WRITE IMAGE
+	 */
+	
+	
+	/*
+	 * BEGIN OF UTILITY  IMAGES
+	 */
+	
+	private static double[][] createWhiteImage(int width, int height){
+		double[][] ret = new double[width][height];
+		
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				ret[i][j] = 255;
+			}
+		}
+		
+		return ret;
+	}
+	
 	public static double[][] nullsDouble(int xSize, int ySize) {
 		double[][] retorno = new double[xSize][ySize];
 		
@@ -132,60 +162,16 @@ public class PDI {
 		return new double[xSize][ySize];
 	}
 	
-	public static int otsuMethod(double[][] image) {
-		 
-	    int[] histogram = getHistogram(image);
-	    // total de pixels da imagem
-	    int total = image.length * image[0].length;
-	    int lowestPixel = (int) getLowestPixel(image);
-	    int highestPixel = (int) getHighestPixel(image);
-	    //probabilidade do grupo 0
-	    int w0 = 0;
-	    //probabilidade do grupo 1
-	    int w1 = 0;
-	    
-	    
-	    int threshold = 0;
-	    
-	    double sum = 0;
-	    double sum0 = 0;
-	    //media do grupo 0
-	    double m0 = 0;
-	    //media do grupo 1
-	    double m1 = 0;
-	    double varMax = 0;
-	    double varianceBetweenClasses = 0.0;
-	    
-	    for(int i= lowestPixel; i< highestPixel; i++){
-	    	sum += i * histogram[i];
-	    }
-	 
-	 
-	    for(int i=0 ; i<256 ; i++) {
-	        w0 += histogram[i];
-	        
-	        if(w0 == 0) continue;
-	        // calculo da probabilidade do grupo 1
-	        w1 = total - w0;
-	        // condição de parada, pois não há mais dois grupos
-	        if(w1 == 0) break;
-	 
-	        sum0 += (double) (i * histogram[i]);
-	        m0 = sum0 / w0;
-	        m1 = (sum - sum0) / w1;
-	 
-	        varianceBetweenClasses = (double) w0 * (double) w1 * (m0 - m1) * (m0 - m1);
-	 
-	        if(varianceBetweenClasses > varMax) {
-	            varMax = varianceBetweenClasses;
-	            threshold = i;
-	        }
-	    }
-	 
-	    return threshold;
-	 
-	}
 	
+	/*
+	 * END OF UTILITY IMAGES
+	 */
+	
+	/*
+	 * BEGIN OF STATISTICS AREA
+	 */
+	
+
 	private static double getDesvioPadrao(double[][] subImage, double avg){
 	
 		double ret = 0.0;
@@ -210,75 +196,6 @@ public class PDI {
 			}
 		}
 		ret /= (subImage.length * subImage[0].length);
-		return ret;
-	}
-	
-	private static double[][] createWhiteImage(int width, int height){
-		double[][] ret = new double[width][height];
-		
-		for (int i = 0; i < ret.length; i++) {
-			for (int j = 0; j < ret[0].length; j++) {
-				ret[i][j] = 255;
-			}
-		}
-		
-		return ret;
-	}
-	
-	
-	public static double[][] niblackMethod(double[][] image, int radius){
-		System.out.println(System.currentTimeMillis());
-		System.out.println("Starting Niblack. Radius = " + radius);
-		//double[][] ret = new double[image.length][image[0].length];
-		double[][] ret = createWhiteImage(image.length, image[0].length);
-		double[][] window = new double[2 * radius + 1][2 * radius + 1];
-		double min = 0;
-		double max = 255;
-		double kt = -0.2;
-		for (int i = radius; i < image.length - radius; i++) {
-			for (int j = radius; j < image[0].length - radius; j++) {
-				//int linha = 0;
-				//int coluna = 0;
-				for (int k = 0; k < window.length; k++) {
-					for (int l = 0; l < window[0].length; l++) {
-						if(k + i < image.length - radius && l + j < image[0].length - radius)
-							window[k][l] = image[k+i][l+j];
-						//coluna++;
-					}
-					//linha++;
-					double avg = getAvarage(window);
-					double desvio = getDesvioPadrao(window, avg);
-					double threshold = avg + kt * desvio;
-					ret[i][j] = (image[i][j] >= threshold) ?   max :  min;
-					
-				}
-				
-				
-			}
-			
-		}
-		System.out.println("DONE!");
-		return ret;
-	}
-	
-	
-	public static double[][] savoula(double[][] image){
-		double[][] ret = new double[image.length][image[0].length];
-		return ret;
-	}
-	
-	public static double[][] binaryImage(double[][] image){
-		int threshold = otsuMethod(image);
-		//double[][] ret = new double[image.length][image[0].length];
-		double[][] ret = createWhiteImage(image.length, image[0].length);
-		double min = 0;
-		double max = 255;
-		for (int i = 0; i < image.length; i++) {
-			for (int j = 0; j < image[0].length; j++) {
-				ret[i][j] = (image[i][j] >= threshold) ?   max :  min; 
-			}
-		}
-		
 		return ret;
 	}
 	
@@ -335,10 +252,465 @@ public class PDI {
 	private static double[] probabilidade(int[] histogram, int pixels){
 		double[] ret = new double[histogram.length];		
 		for (int i = 0; i < histogram.length; i++) {
-			ret[i] = (double) histogram[i] / pixels;
+			
+			ret[i] = (double)histogram[i]/pixels;
 		}
 		
 		return ret;
+	}
+	
+
+	/**
+	 * Equalização do Histograma.
+	 * @param image
+	 * @return double[][] imagem
+	 */
+	
+	public static double[][] histogramEqualization(double[][] image){
+	
+		
+		int[] histogram = getHistogram(image);
+//		double[] probabilidade = new double[histogram.length];
+		
+
+		int size = image.length * image[0].length;
+		double[] probabilidade = probabilidade(histogram, size);
+		
+		
+		double[][] ret = new double[image.length][image[0].length];
+		
+		// calculando a probabilidade para cada valor de pixel aparecer na imagem
+		
+		
+		// calculando a probabilidade acumulativa
+		int[] cumulativeProbabilidade = cumulativeDistribution(probabilidade, size);	
+		
+		// mapear os valores de níveis de cinza para os novos valores
+		//printHistogram(cumulativeProbabilidade);
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				int pixelValue = (int) image[i][j];
+				
+				ret[i][j] = cumulativeProbabilidade[pixelValue];
+				
+			}
+		}
+		//System.out.println(getLowestPixel(image));
+		//System.out.println(getHighestPixel(image));
+		
+		
+		
+		return ret;
+	}
+	
+	
+	
+	
+	
+	/*
+	 * transformar as probabilidades, somando a atual com a anterior. depois multiplicar
+	 * pela quantidade de tons de cinza e arrendondar esse valor.
+	 */
+	
+	private static int[] cumulativeDistribution(double[] probabilidade, int pixels){
+		int[] ret = new int[probabilidade.length];
+		double cumulative = 0;
+		
+		for (int i = 0; i < probabilidade.length; i++) {
+			
+			cumulative += (double)(probabilidade[i]);
+			
+			ret[i] = (int) Math.round(cumulative * (probabilidade.length - 1 ));
+			
+			//System.out.println(ret[i]);
+		}
+		
+		
+		return ret;
+	}
+	
+	
+	
+	
+	 /*
+	  * BEGIN OF THRESHOLDING AREA
+	  */
+	
+	
+	public static double[][] binaryImage(double[][] image){
+		double min = 0.0;
+		double max = 255.0;
+		double[][] ret = new double[image.length][image[0].length];
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret.length; j++) {
+				if(image[i][j] == min || image[i][j] == max){
+					ret[i][j] = (image[i][j] == min)? 0: 1;
+					
+				}else {
+					System.out.println("fodeu, galera! ");
+				}
+				
+			}
+		}
+		return ret;
+	}
+	
+	public static double[][] inpainting(double[][] image, double[][] mask){
+		//FIXME
+		
+		/**
+		 * TA MEIO ESCROTO ESSA PORRA AQUI! ELE TEM QUE FAZER 4 ITERACOES
+		 * 
+		 * EDCB, EDBC, DECB, DEBC
+		 */
+		
+		System.out.println("begin!");
+		printTime();
+		int radius = 3;
+		int height = image.length;
+		int width = image[0].length;
+		
+		System.out.println(width); //coluna
+		System.out.println(height); // linha
+		 
+		double[][] tempImage = new double[image.length][image[0].length];
+		int[] ystart = {radius,radius, height - radius, height - radius};
+		int[] yend = {height - radius, height - radius, radius, radius};
+		
+		int[] xstart = {radius, width - radius, radius, width - radius};
+		int[] xend = {width - radius, radius, width - radius, radius};
+		int step = 0;
+	
+		
+		double[][] background = new double[image.length][image[0].length];		
+		for (int i = 0; i < background.length; i++) {
+			for (int j = 0; j < background[0].length; j++) {
+				background[i][j] = Double.MAX_VALUE; 
+			}
+		}
+		
+		double[][] binary = PDI.binaryImage(mask);
+		
+		do{
+			double[][] tempMask = binary.clone();			
+			//double[][] tempMask = new double[mask.length][mask[0].length];
+			
+			//System.out.println(xstart[step] + " " + xend[step]);
+			//System.out.println(ystart[step] + " " + yend[step]);
+					
+			
+			int i = ystart[step];
+			int j;
+			while(true) {
+				
+				if((i > yend[step] && (step == 0 || step == 1) ) || (i <= yend[step] && (step == 2 || step == 3))){
+					System.out.println("morre");
+					break;
+				}
+				
+				if(step == 0 || step == 2)
+					j = xstart[0];
+				else
+					j = xstart[1];
+				
+				
+				
+				while (true) {
+					if( (j > xend[step] && (step == 0 || step == 2) || (j <= xend[step] && (step == 1 || step == 3))) ){
+						
+						//System.out.println("ola");
+						break;
+					}
+					//System.out.println(j);
+					
+					if(tempMask[i][j] == 0){
+						//System.out.println(step + ": " + i + "\t" + j);	
+						double avg = (double)(image[i-1][j] * tempMask[i-1][j] + image[i][j-1] * tempMask[i][j-1] +  image[i+1][j] * tempMask[i+1][j] +  image[i][j+1] * tempMask[i][j+1])/(4);
+						//System.out.println(avg);
+						tempImage[i][j] = avg;
+						if(avg < background[i][j]){
+							
+							background[i][j] = avg;
+						}
+						tempMask[i][j] = 1;
+					}
+					j = (step == 0|| step == 2) ? j + 1 : j - 1;
+					
+					//System.out.println(i + "\t" + j);
+				
+					
+				}
+				
+				
+				
+				i = (step == 0 || step == 1) ? i + 1 : i - 1;
+			}
+				
+			
+			
+			step++;
+		}while(step < 4);
+		
+		System.out.println("edn!");
+		printTime();
+		
+		return background;
+		
+	}
+	
+	public static int otsuMethod(double[][] image) {
+		 
+	    int[] histogram = getHistogram(image);
+	    // total de pixels da imagem
+	    int total = image.length * image[0].length;
+	    int lowestPixel = (int) getLowestPixel(image);
+	    int highestPixel = (int) getHighestPixel(image);
+	    //probabilidade do grupo 0
+	    int w0 = 0;
+	    //probabilidade do grupo 1
+	    int w1 = 0;
+	    
+	    
+	    int threshold = 0;
+	    
+	    double sum = 0;
+	    double sum0 = 0;
+	    //media do grupo 0
+	    double m0 = 0;
+	    //media do grupo 1
+	    double m1 = 0;
+	    double varMax = 0;
+	    double varianceBetweenClasses = 0.0;
+	    
+	    for(int i= lowestPixel; i< highestPixel; i++){
+	    	sum += i * histogram[i];
+	    }
+	 
+	 
+	    for(int i=0 ; i<256 ; i++) {
+	        w0 += histogram[i];
+	        
+	        if(w0 == 0) continue;
+	        // calculo da probabilidade do grupo 1
+	        w1 = total - w0;
+	        // condição de parada, pois não há mais dois grupos
+	        if(w1 == 0) break;
+	 
+	        sum0 += (double) (i * histogram[i]);
+	        m0 = sum0 / w0;
+	        m1 = (sum - sum0) / w1;
+	 
+	        varianceBetweenClasses = (double) w0 * (double) w1 * (m0 - m1) * (m0 - m1);
+	 
+	        if(varianceBetweenClasses > varMax) {
+	            varMax = varianceBetweenClasses;
+	            threshold = i;
+	        }
+	    }
+	 
+	    return threshold;
+	 
+	}
+	
+	
+	
+	/**
+	 * 
+	 * @param image
+	 * @param radius
+	 * @return
+	 */
+	
+	public static double[][] niblackMethod(double[][] image, int radius, boolean inverse){
+		printTime();
+
+		System.out.println("Starting Niblack. Radius = " + radius);
+		//double[][] ret = new double[image.length][image[0].length];
+		double[][] ret = createWhiteImage(image.length, image[0].length);
+		double[][] window = new double[2 * radius + 1][2 * radius + 1];
+		double min = 0;
+		double max = 255;
+		double kt = -0.2;
+		for (int i = radius; i < image.length - radius; i++) {
+			for (int j = radius; j < image[0].length - radius; j++) {
+				//int linha = 0;
+				//int coluna = 0;
+				for (int k = 0; k < window.length; k++) {
+					for (int l = 0; l < window[0].length; l++) {
+						if(k + i < image.length - radius && l + j < image[0].length - radius)
+							window[k][l] = image[k+i][l+j];
+						//coluna++;
+					}
+					//linha++;
+					double avg = getAvarage(window);
+					double desvio = getDesvioPadrao(window, avg);
+					double threshold = avg + kt * desvio;
+					ret[i][j] = (image[i][j] >= threshold) ?   max :  min;
+					
+				}
+				
+				
+			}
+			
+		}
+		if(inverse){
+			ret = inverse(ret);
+		}
+		System.out.println("DONE!");
+		printTime();
+		return ret;
+	}
+	
+	public static double[][] inverse(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];
+		double min = 0.0;
+		double max = 255.0;
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (image[i][j] == min) ?   max :  min;
+			}
+		}
+		
+		return ret;
+	}
+	
+	
+	public static double[][] savoula(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];
+		return ret;
+	}
+	/*
+	public static double[][] binaryImage(double[][] image){
+		int threshold = otsuMethod(image);
+		//double[][] ret = new double[image.length][image[0].length];
+		double[][] ret = createWhiteImage(image.length, image[0].length);
+		double min = 0;
+		double max = 255;
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (image[i][j] >= threshold) ?   max :  min; 
+			}
+		}
+		
+		return ret;
+	}
+	*/
+	/*
+	 * END OF THRESHOLDING AREA
+	 */
+	
+	
+	/*
+	 * BEGIN OF FILTERS
+	 */
+	
+	public static double[][] laplacean(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];	
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				if((i+1 < ret.length-10 && j+1 < ret[0].length-10 && i - 1 >= 0 && j - 1 >= 0)){
+					//System.out.println(i + "\t" + j);
+					double temp = image[i+1][j] + image[i-1][j] + image[i][j+1] + image[i][j-1] - 4 * image[i][j];
+					
+					if(temp >= 0 ) {
+						ret[i][j] = temp; 
+					}
+					else{ 
+						ret[i][j] = 0;
+					}							
+					
+				}
+				else{
+					ret[i][j] = 0;
+				}
+			}
+		}
+		
+		return ret;
+	}
+	
+public static double[][] medianFilter(double[][] image, int radius){
+		
+		double[][] ret = new double[image.length][image[0].length];
+		double[][] mask = new double[2 * radius + 1][2 * radius + 1];
+		
+		for(int i = radius ; i < image.length - (2 * radius + 1); i++){
+			for(int j = radius ; j < image[0].length - (2 * radius + 1); j++){
+				double[] array = new double[mask.length * mask.length];
+				int count = 0;
+				for(int k = 0 ; k < mask.length; k++){
+					for(int l = 0 ; l < mask[0].length; l++){
+						
+						array[count] = image[k+i][l+j]; 
+						count++;
+					}
+					//System.out.println(count);
+				}
+				Arrays.sort(array);
+				ret[i][j] = array[array.length/2];
+			}
+		}
+		
+		return ret;
+	}
+	
+	/*
+	 * END OF FILTERS
+	 */
+	
+	
+	/*
+	 * BEGIN OF MORPHOLOGY
+	 */
+	
+	
+	public static double[][] dilatation(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];
+		/*
+		double[][] se = {
+							{255,0,255},
+							{0,0,0},
+							{255,0,255}
+						};
+		*/
+		double[][] se = {
+				{0,0,0},
+				{0,0,0},
+				{0,0,0}
+			};
+		
+		for (int i = 1; i < image.length - 1; i++) {
+			for (int j = 1; j < image[0].length - 1; j++) {
+				if( image[i-1][j] == se[0][1]   ||
+					image[i-1][j-1] == se[0][0] ||
+					image[i-1][j+1] == se[1][1] ||					
+					image[i][j-1] == se[1][0]   ||
+					image[i][j] == se[1][1]     ||
+					image[i][j+1] == se[0][2]   ||
+					image[i+1][j-1] == se[2][0] ||
+					image[i+1][j+1] == se[2][2] ||
+					image[i+1][j] == se[2][1]
+					
+						){
+					ret[i][j] = 0;
+				}
+				else{
+					ret[i][j] = 255;
+				}
+			}
+		}
+		
+		
+		return ret;
+	}
+	/*
+	 * BEGIN OF UTILS FUNCTIONS
+	 */
+	
+	private static void printTime(){
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		System.out.println(dateFormat.format(date)); //2014/08/06 15:59:48
 	}
 
 }
