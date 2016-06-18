@@ -21,20 +21,29 @@ public class PDITeste {
 			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
 			double[][] cinza = PDI.retornaImagemCinza(colorida);
 			double[][] background;
-			int radius = 30;
-			//primeiro passo
-			double[][] niblack = PDI.niblackMethod(cinza, 4, false);
-			//cinza = PDI.inverse(cinza);
+			int radius = 20;
+			
+			//primeiro passo - niblack
+			double[][] niblack = PDI.niblackMethod(cinza, radius, false);
 			niblack = PDI.dilatation(niblack);
+			
+			//cinza = PDI.inverse(cinza);
 			
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
 			//cinza = PDI.inverse(cinza);
-			//segundo passo
+			
+			//segundo passo - background estimation inpainting method
 			background = PDI.inpainting(cinza, niblack);
-			//ŧerceiro passo
+			
+			//ŧerceiro passo - normalization between original and background inpainting
 			double[][] normal = PDI.imageNormalization(cinza, background);
 			
-			PDI.salvaImagem(PATH + IMAGES[i] + "_final" + OUTPUTEXT,normal);
+			//quarto passo - otsu on normalized image
+			
+			double[][] otsu = PDI.otsuMethod(normal);
+			
+			
+			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT,otsu);
 			
 			/*
 			//double[][] gray = PDI.lerImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT);//dilatation

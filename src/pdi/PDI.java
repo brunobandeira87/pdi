@@ -390,6 +390,18 @@ public class PDI {
 		}
 		return ret;
 	}
+	
+	private static double[][] threshImage(double[][] image, int threshold){
+		double[][] ret = new double[image.length][image[0].length];
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (image[i][j] <= threshold) ? 0 : 255;
+			}
+		}
+		
+		return ret;
+	}
 
 	
 	public static double[][] inpainting(double[][] image, double[][] mask){
@@ -524,7 +536,9 @@ public class PDI {
 	
 	}
 	
-	public static int otsuMethod(double[][] image) {
+	
+	
+	public static double[][] otsuMethod(double[][] image) {
 		 
 	    int[] histogram = getHistogram(image);
 	    // total de pixels da imagem
@@ -573,8 +587,10 @@ public class PDI {
 	            threshold = i;
 	        }
 	    }
+	    
+	    double[][] ret = threshImage(image, threshold); 
 	 
-	    return threshold;
+	    return ret;
 	 
 	}
 	
