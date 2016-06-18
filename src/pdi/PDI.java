@@ -588,7 +588,7 @@ public class PDI {
 	        }
 	    }
 	    
-	    double[][] ret = threshImage(image, threshold); 
+	    double[][] ret = inverse(threshImage(image, threshold)); 
 	 
 	    return ret;
 	 
