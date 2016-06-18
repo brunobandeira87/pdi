@@ -16,21 +16,21 @@ public class PDITeste {
 	}
 	
 	public static void transformToGray(){
-		for (int i = 0; i < PATH.length(); i++) {
+		for (int i = 0; i < IMAGES.length; i++) {
 			System.out.println("IMAGE: " + IMAGES[i]);
 			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
 			double[][] cinza = PDI.retornaImagemCinza(colorida);
 			double[][] background;
 			int radius = 30;
 			//primeiro passo
-			double[][] niblack = PDI.niblackMethod(cinza, radius, false);
+			double[][] niblack = PDI.niblackMethod(cinza, 4, false);
 			//cinza = PDI.inverse(cinza);
 			niblack = PDI.dilatation(niblack);
 			
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
 			//cinza = PDI.inverse(cinza);
 			//segundo passo
-			background = cinza = PDI.inpainting(cinza, niblack);
+			background = PDI.inpainting(cinza, niblack);
 			//ŧerceiro passo
 			double[][] normal = PDI.imageNormalization(cinza, background);
 			

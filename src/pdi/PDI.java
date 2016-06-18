@@ -308,7 +308,12 @@ public class PDI {
 		
 		for (int i = 0; i < image.length; i++) {
 			for (int j = 0; j < image[0].length; j++) {
-				ret[i][j] = (double)(image[i][j] + 1) / (background[i][j] + 1);
+				image[i][j] = (image[i][j] > 255)? 255: image[i][j];
+				background[i][j] = (background[i][j] > 255 ) ? 255 : background[i][j];
+				ret[i][j] = (double)((image[i][j] + 1) / (background[i][j] + 1));
+				
+				//System.out.println(image[i][j] +"\t " +background[i][j] );
+				//System.out.println(background[i][j]);
 			}
 		}
 		
@@ -317,19 +322,23 @@ public class PDI {
 	}
 	
 	public static double[][] imageNormalization(double[][] image, double[][] background){
+		System.out.println("Image Normalization has begun!: " + printTime());
 		double iMax = getHighestPixel(image);
 		double iMin = getLowestPixel(image);
 		double[][] normalized = normalization(image, background);
 		double fMax = getHighestPixel(normalized);
 		double fMin = getLowestPixel(normalized);
 		double[][] ret = new double[image.length][image[0].length];
-		
+		//System.out.println(fMax);
 		for (int i = 0; i < image.length; i++) {
 			for (int j = 0; j < image[0].length; j++) {
-				ret[i][j] = (iMax - iMin) * ((normalized[i][j] - fMin)/(fMax - fMin)) + iMin;  
+				//double q = ((double)((normalized[i][j] - fMin)/(fMax - fMin)));
+				//System.out.println(q);
+				ret[i][j] = (iMax - iMin) * (double)((double)(normalized[i][j] - fMin)/(fMax - fMin)) + iMin;
+				
 			}
 		}
-		
+		System.out.println("Image Normalization has finished!: " + printTime());
 		return ret;
 	}
 	
