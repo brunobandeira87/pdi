@@ -42,9 +42,9 @@ public class PDITeste {
 			
 			double[][] otsu = PDI.otsuMethod(normal);
 			
-			
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT,otsu);
 			
+			//PDI.salvaImagem(PATH + IMAGES[i] +"_laplacean" + OUTPUTEXT,PDI.laplacean(PDI.lerImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT)));
 			/*
 			//double[][] gray = PDI.lerImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT);//dilatation
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_di21" + OUTPUTEXT, PDI.inverse(PDI.dilatation(gray)));
