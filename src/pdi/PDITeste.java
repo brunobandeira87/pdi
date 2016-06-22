@@ -1,19 +1,23 @@
 package pdi;
-import images.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class PDITeste {
 
-	public static String PATH = "/home/bandeira/Documents/university/2016.1/pdi/workspace/DocumentBinary/src/images/";
-//	public static String PATH = "/Users/Vinicius/Documents/workspace/pdi/src/images/";
+//	public static String PATH = "/home/bandeira/Documents/university/2016.1/pdi/workspace/DocumentBinary/src/images/";
+	public static String PATH = "/Users/Vinicius/Documents/workspace/pdi/src/images/";
 	public static String INPUTEXT = ".png";
 	public static String OUTPUTEXT = ".jpg";
 	public static String[] IMAGES = {"H01", "H02","H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10" };
+//	public static String[] IMAGES = {"H01"};
 	
 	public static void main(String[] args) {	
 		transformToGray();
-		//gatos();
+//		gatos();
 		//freak();
 	}
+	
+
 	
 	public static void transformToGray(){
 		for (int i = 0; i < IMAGES.length; i++) {
@@ -21,7 +25,7 @@ public class PDITeste {
 			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
 			double[][] cinza = PDI.retornaImagemCinza(colorida);
 			double[][] background;
-			int radius = 20;
+			int radius = 30;
 			
 			//primeiro passo - niblack
 			double[][] niblack = PDI.niblackMethod(cinza, radius, false);
@@ -39,9 +43,7 @@ public class PDITeste {
 			double[][] normal = PDI.imageNormalization(cinza, background);
 			
 			//quarto passo - otsu on normalized image
-			
 			double[][] otsu = PDI.otsuMethod(normal);
-			
 			
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT,otsu);
 			
@@ -55,9 +57,6 @@ public class PDITeste {
 			PDI.salvaImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT,PDI.niblackMethod(cinza, 30, true));
 			*/
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_niblack15" + OUTPUTEXT, PDI.niblackMethod(cinza, 15));
-			
-			
-			
 			
 		}
 	}
