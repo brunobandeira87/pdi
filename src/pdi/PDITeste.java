@@ -1,5 +1,6 @@
 package pdi;
-import images.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class PDITeste {
 
@@ -8,12 +9,15 @@ public class PDITeste {
 	public static String INPUTEXT = ".png";
 	public static String OUTPUTEXT = ".jpg";
 	public static String[] IMAGES = {"H01", "H02","H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10" };
+//	public static String[] IMAGES = {"H01"};
 	
 	public static void main(String[] args) {	
 		transformToGray();
-		//gatos();
+//		gatos();
 		//freak();
 	}
+	
+
 	
 	public static void transformToGray(){
 		for (int i = 0; i < IMAGES.length; i++) {
@@ -21,7 +25,7 @@ public class PDITeste {
 			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
 			double[][] cinza = PDI.retornaImagemCinza(colorida);
 			double[][] background;
-			int radius = 20;
+			int radius = 30;
 			
 			//primeiro passo - niblack
 			double[][] niblack = PDI.niblackMethod(cinza, radius, false);
@@ -39,7 +43,6 @@ public class PDITeste {
 			double[][] normal = PDI.imageNormalization(cinza, background);
 			
 			//quarto passo - otsu on normalized image
-			
 			double[][] otsu = PDI.otsuMethod(normal);
 			
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT,otsu);
@@ -55,9 +58,6 @@ public class PDITeste {
 			PDI.salvaImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT,PDI.niblackMethod(cinza, 30, true));
 			*/
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_niblack15" + OUTPUTEXT, PDI.niblackMethod(cinza, 15));
-			
-			
-			
 			
 		}
 	}
@@ -84,25 +84,7 @@ public class PDITeste {
 	}
 
 	
-	public static void freak(){
-		double[][] image = {
-								{1,1,3,2,1,6},
-								{4,2,3,3,2,2},
-								{1,0,5,4,6,3},
-								{5,0,6,5,7,3},
-								{6,7,1,7,7,0},
-								{7,1,0,0,1,0},
-						   };
-		double[][] mask = {
-				{1,1,0,0,1,0},
-				{1,1,1,0,0,0},
-				{1,0,1,1,0,0},
-				{0,0,1,0,1,1},
-				{0,0,0,1,1,0},
-				{1,1,0,0,1,0},
-		   };
-		
-	}
+
 	public static double[][] inpainting(double[][] image, double[][] mask){
 		//FIXME
 		
