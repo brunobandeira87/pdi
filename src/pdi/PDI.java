@@ -761,10 +761,19 @@ public class PDI {
 		
 		
 		
-		// aquela razão RPj/RCj 
+		// aquela razão RPj/RCj
+		/*
+		for (int i = 0; i < temp.length; i++) {
+			for (int j = 0; j < temp[0].length; j++) {
+				if(temp[i][j] != 0){
+					System.out.println("achei, porra!: "  + temp[i][j]);
+				}
+			}
+		}
+		*/
 		int height = getBestHeight(temp);
 		
-		
+		System.out.println("height: " + height);
 		ret = inverse(threshImage(temp, height));
 
 		
@@ -801,24 +810,27 @@ public class PDI {
 						ret[i][j] = ret[i][j-1];
 					}
 					else if(ret[i][j-1] != bg && ret[i-1][j] != bg){
-						table.addRelation(ret[i][j-1], ret[i-1][j]);
-						ret[i][j] = label;
+						if(ret[i][j-1] != ret[i-1][j]){
+							table.addRelation(ret[i][j-1], ret[i-1][j]);
+						}
+						
+						ret[i][j] = ret[i-1][j];
+						//ret[i][j] = label;
 					}
+					
 				}
 			}
 		}
 		table.map();
 		// segundo passo, reduzir a quantidade de labels
 		for (int i = 0; i < ret.length; i++) {
-			for (int j = 0; j < ret.length; j++) {
-				if(ret[i][j] != bg)
-				ret[i][j] = table.getAssociatedValue(ret[i][j]);
-				
-					
+			for (int j = 0; j < ret[0].length; j++) {				
+				ret[i][j] = (ret[i][j] != bg) ? table.getAssociatedValue(ret[i][j]) : 0;					
 			}
 		}
 		// Metodo pra calcular a altura de cada Label 
 		table.associateLabelWithHeight(ret);
+		
 		return ret;
 	}
 	
