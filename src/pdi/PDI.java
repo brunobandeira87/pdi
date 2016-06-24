@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -18,6 +21,8 @@ public class PDI {
 	/*
 	 * BEGIN OF READ IMAGE FILE
 	 */
+	
+	private static LookupTable table = new LookupTable();
 
 	public static double[][] lerImagem(String caminho) throws RuntimeException {
 		File f = new File(caminho);
@@ -307,8 +312,7 @@ public class PDI {
 
 			}
 		}
-		// System.out.println(getLowestPixel(image));
-		// System.out.println(getHighestPixel(image));
+
 
 		return ret;
 	}
@@ -334,7 +338,7 @@ public class PDI {
 
 	public static double[][] imageNormalization(double[][] image,
 			double[][] background) {
-		System.out.println("Image Normalization has begun!: " + printTime());
+		System.out.println("Image Normalization has begun! " + printTime());
 		double iMax = getHighestPixel(image);
 		double iMin = getLowestPixel(image);
 		double[][] normalized = normalization(image, background);
@@ -353,7 +357,7 @@ public class PDI {
 
 			}
 		}
-		System.out.println("Image Normalization has finished!: " + printTime());
+		System.out.println("Image Normalization has finished! " + printTime());
 		return ret;
 	}
 
@@ -412,21 +416,30 @@ public class PDI {
 
 		return ret;
 	}
+	
+	private static int[][] threshImage(int[][] image, int threshold) {
+		int[][] ret = new int[image.length][image[0].length];
+
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				//ret[i][j] = (image[i][j] <= threshold) ? 0 : 255;
+				if(image[i][j] == -1){
+					ret[i][j] = 0;
+					continue;
+				}
+				ret[i][j] = (table.getAssociatedValue(image[i][j]) >= threshold) ? 255 : 0;
+			}
+		}
+
+		return ret;
+	}
+
 
 	public static double[][] inpainting(double[][] image, double[][] mask) {
 
-		System.out.println("Background Estimation has begun!: " + printTime());
+		System.out.println("Background Estimation has begun! " + printTime());
 
-		int radius = 3;
-		int height = image[0].length;
-		int width = image.length;
-
-		/*
-		 * int height = 8; int width = 9; System.out.println(image.length);
-		 * //coluna System.out.println(image[0].length); // linha
-		 * System.out.println(); System.out.println(mask.length); //coluna
-		 * System.out.println(mask[0].length); // linha
-		 */
+		int radius = 1;
 		double[][] tempImage = new double[image.length][image[0].length];
 
 		double[][] background = new double[image.length][image[0].length];
@@ -459,8 +472,8 @@ public class PDI {
 		}
 
 		tempMask = mask.clone();
-		for (int i = radius; i < background.length - radius; i++) {
-			for (int j = background[0].length - radius; j > 0; j--) {
+		for (int i = radius; i < background.length - radius -1; i++) {
+			for (int j = background[0].length - radius -1 ; j > 0; j--) {
 				if (tempMask[i][j] == 0) {
 
 					double x1 = image[i][j - 1] * tempMask[i][j - 1];
@@ -479,8 +492,8 @@ public class PDI {
 			}
 		}
 		tempMask = mask.clone();
-		for (int i = background.length - radius; i > 0; i--) {
-			for (int j = radius; j < background[0].length - radius; j++) {
+		for (int i = background.length - radius - 1; i > 0; i--) {
+			for (int j = radius; j < background[0].length - radius - 1; j++) {
 				if (tempMask[i][j] == 0) {
 
 					double x1 = image[i][j - 1] * tempMask[i][j - 1];
@@ -500,8 +513,8 @@ public class PDI {
 			}
 		}
 		tempMask = mask.clone();
-		for (int i = background.length - radius; i > 0; i--) {
-			for (int j = background[0].length - radius; j > 0; j--) {
+		for (int i = background.length - radius -1; i > 0; i--) {
+			for (int j = background[0].length - radius - 1; j > 0; j--) {
 				if (tempMask[i][j] == 0) {
 
 					double x1 = image[i][j - 1] * tempMask[i][j - 1];
@@ -520,14 +533,14 @@ public class PDI {
 				}
 			}
 		}
-		System.out.println("Background Estimation has finished!: "
+		System.out.println("Background Estimation has finished! "
 				+ printTime());
 		return background;
 
 	}
 
 	public static double[][] otsuMethod(double[][] image) {
-
+		System.out.println("Otsu method has begun!  " + printTime());
 		int[] histogram = getHistogram(image);
 		// total de pixels da imagem
 		int total = image.length * image[0].length;
@@ -578,7 +591,7 @@ public class PDI {
 		}
 
 		double[][] ret = inverse(threshImage(image, threshold));
-
+		System.out.println("Otsu method has finished!  " + printTime());
 		return ret;
 
 	}
@@ -590,8 +603,7 @@ public class PDI {
 	 * @return
 	 */
 
-	public static double[][] niblackMethod(double[][] image, int radius,
-			boolean inverse) {
+	public static double[][] niblackMethod(double[][] image, int radius, double kt, boolean inverse) {
 
 		int windowSize = 2 * radius + 1;
 		System.out.println("Niblack has begun! Radius: " + radius + " "
@@ -601,7 +613,7 @@ public class PDI {
 		double[][] window = new double[windowSize][windowSize];
 		double min = 0;
 		double max = 255;
-		double kt = -0.2;
+		
 		for (int i = radius; i < image.length - radius; i++) {
 			for (int j = radius; j < image[0].length - radius; j++) {
 				// int linha = 0;
@@ -632,6 +644,19 @@ public class PDI {
 	}
 
 	public static double[][] inverse(double[][] image) {
+		double[][] ret = new double[image.length][image[0].length];
+		double min = 0.0;
+		double max = 255.0;
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (image[i][j] == min) ? max : min;
+			}
+		}
+
+		return ret;
+	}
+	
+	public static double[][] inverse(int[][] image) {
 		double[][] ret = new double[image.length][image[0].length];
 		double min = 0.0;
 		double max = 255.0;
@@ -717,53 +742,141 @@ public class PDI {
 
 		return ret;
 	}
-
-	private static int countConnected(double[][] image, int altura) {
-		int count = 0;
-		for (int i = altura; i < image.length; i++) {
-			for (int j = altura; j < image[0].length; j++) {
-				// TODO contar quantos pxls identificados como letra e que
-				// pertencem a um componente conectado de altura "altura"
-			}
-		}
-		return count;
-	}
-
-	private static double razaoRP(double[][] image, int altura) {
-		int countConnected = countConnected(image, altura);
-		int count1Geral = 0;
-		for (int i = 0; i < image.length; i++) {
-			for (int j = 0; j < image[0].length; j++) {
-				if (image[i][j] == 255) {
-					count1Geral++;
-				}
-			}
-		}
-		double razao = countConnected / 3 * count1Geral;
-		return razao;
-	}
-
-	private static double razaoRC(double[][] image, int altura) {
-		// TODO
-		return 0;
-	}
-
-	public static double[][] globalBinarization(double[][] image) {
-		double[][] returnImage = new double[image.length][image[0].length];
-		int h = 1;
-		double razaoRP = 0;
-		double razaoRC = 1;
-		while (razaoRP < razaoRC) {
-			razaoRP = razaoRP(image, h);
-		}
-		// TODO
-
-		return returnImage;
-	}
+	
 
 	/*
 	 * END OF FILTERS
 	 */
+
+
+	
+	/*
+	 * BEGIN OF GLOBAL BINARIZATION
+	 */
+	
+	public static double[][] globalBinarization(double[][] image) {
+		double[][] ret = new double[image.length][image[0].length];
+		System.out.println("Global Binarization has begun!  " + printTime());
+		int[][] temp = assignLabels(image);
+		
+		
+		
+		// aquela razão RPj/RCj 
+		int height = getBestHeight(temp);
+		
+		
+		ret = inverse(threshImage(temp, height));
+
+		
+		System.out.println("Global Binarization has finished!  " + printTime());
+		return ret;
+	}
+	
+	
+	/**
+	 * Vai agrupar pixels por subconjuntos através da vizinha-4
+	 * @param image
+	 * @return
+	 */
+	private static int[][] assignLabels(double[][] image){
+		int[][] ret = new int[image.length][image[0].length];
+		int bg = -1;
+		int label = 1;
+		for (int i = 1; i < image.length; i++) {
+			for (int j = 1; j < image[0].length; j++) {
+				if(image[i][j] == 255){ // se for background
+					ret[i][j] = bg; 
+				}
+				// a classificacao será feita de acordo com o pixel acima e o pixel a esquerda do pixel central da vizinhança de 4
+				else{
+					// pixel à esquerda e a acima são bg, pixel central ganha label
+					if(ret[i-1][j] == bg && ret[i][j-1] == bg){
+						ret[i][j] = label++;
+					}
+					//pixel a esquerda já esta marcado, então pixel central recebe o valor do label do pixel da esquerda
+					else if(ret[i-1][j] != bg && ret[i][j-1] == bg){
+						ret[i][j] = ret[i-1][j];
+					}
+					else if(ret[i][j-1] != bg && ret[i-1][j] == bg){
+						ret[i][j] = ret[i][j-1];
+					}
+					else if(ret[i][j-1] != bg && ret[i-1][j] != bg){
+						table.addRelation(ret[i][j-1], ret[i-1][j]);
+						ret[i][j] = label;
+					}
+				}
+			}
+		}
+		table.map();
+		// segundo passo, reduzir a quantidade de labels
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret.length; j++) {
+				if(ret[i][j] != bg)
+				ret[i][j] = table.getAssociatedValue(ret[i][j]);
+				
+					
+			}
+		}
+		// Metodo pra calcular a altura de cada Label 
+		table.associateLabelWithHeight(ret);
+		return ret;
+	}
+	
+	
+	/**
+	 * Count the number of connected pixels which its height is equal of method's parameter.
+	 * @param image
+	 * @param altura
+	 * @return
+	 */
+	private static int countConnected(int[][] image, int altura) {
+		int count = 0;
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				if(image[i][j] > 0 && table.getHeightByLabel((int)image[i][j]) == altura){
+					count++;
+				}
+			}
+		}
+		
+		return count;
+	}
+	
+	
+	private static int getBestHeight(int[][] image){
+		// o algoritmo diz pra iniciar a altura = 1 
+		int ret = 1;
+		double razaoRP = 0;
+		double razaoRC = 1;
+		while (razaoRP < razaoRC) {
+			razaoRP = razaoRP(image, ret);
+			razaoRC = razaoRC(ret);
+			
+			ret++;
+		}
+		return ret;
+	}
+
+	private static double razaoRP(int[][] image, int altura) {
+		int countConnected = countConnected(image, altura);
+		int count1Geral = table.getReducedTableSize();		
+		double ret = (double) countConnected / (count1Geral);
+		return ret;
+	}
+
+	private static double razaoRC(int altura) {		
+		int ncj = table.getNumberOfLabeledByHeight(altura);
+		int nco = table.getReducedTableSize();		
+		double ret = ((double)ncj / nco) ;		
+		return ret;
+	}
+	
+	/*
+	 * END OF GLOBAL BINARIZATION
+	 */
+	
+
 
 	/*
 	 * BEGIN OF MORPHOLOGY
@@ -798,6 +911,14 @@ public class PDI {
 
 		return ret;
 	}
+	
+	
+	public static double[][] skeleton(double[][] image){
+		//TODO : Implementar a esqueletização
+		
+		double[][] ret = new double[image.length][image[0].length];
+		return ret;
+	}
 
 	/*
 	 * BEGIN OF UTILS FUNCTIONS
@@ -806,7 +927,9 @@ public class PDI {
 	private static String printTime() {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
-		return (dateFormat.format(date)); // 2014/08/06 15:59:48
+		String ret = "[ " + (dateFormat.format(date)) +  " ]"; 
+		return ret; // 2014/08/06 15:59:48
 	}
+	
 
 }
