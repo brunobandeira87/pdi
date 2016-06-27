@@ -12,7 +12,9 @@ public class PDITeste {
 //	public static String[] IMAGES = {"H01"};
 	
 	public static void main(String[] args) {	
-	transformToGray();
+		ourAlgorithm();
+		//f();
+		
 		
 	
 		
@@ -20,9 +22,18 @@ public class PDITeste {
 		//freak();
 	}
 	
+	public static void onlyOtsu(){
+		for (int i = 0; i < IMAGES.length; i++) {
+			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
+			double[][] cinza = PDI.retornaImagemCinza(colorida);
+			PDI.salvaImagem(PATH + IMAGES[i] + "_otsu_" + OUTPUTEXT, PDI.inverse(PDI.otsuMethod(cinza)));
+			
+		}
+	}
+	
 
 	
-	public static void transformToGray(){
+	public static void ourAlgorithm(){
 		for (int i = 0; i < IMAGES.length; i++) {
 			System.out.println("IMAGE: " + IMAGES[i]);
 			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
@@ -32,13 +43,11 @@ public class PDITeste {
 			double kt = -0.2;
 			//primeiro passo - niblack
 			double[][] niblack = PDI.niblackMethod(cinza, radius, kt, false);
+			PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
+			//double[][] niblack = PDI.otsuMethod(cinza);
 			niblack = PDI.dilatation(niblack);
 			
-			//cinza = PDI.inverse(cinza);
-			
-			//PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
-			//cinza = PDI.inverse(cinza);
-			
+				
 			//segundo passo - background estimation inpainting method
 			background = PDI.inpainting(cinza, niblack);
 			
@@ -50,7 +59,7 @@ public class PDITeste {
 			
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu_" + OUTPUTEXT,otsu);
 			
-			double[][] label = PDI.globalBinarization(otsu);
+			double[][] label = PDI.globalBinarization(otsu, radius);
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_label_" + OUTPUTEXT,label);
 			//break;
 			
@@ -69,6 +78,52 @@ public class PDITeste {
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_niblack15" + OUTPUTEXT, PDI.niblackMethod(cinza, 15));
 			
 		}
+	}
+	
+	
+	public static void f(){
+		double[][] img= {
+				
+				{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
+				{255, 255, 0, 0, 255, 255, 0, 0, 255, 0, 255, 255},
+				{255, 255, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255},
+				{255, 255, 0, 0, 0, 0, 0, 0, 255, 0, 255, 255},
+				{255, 255, 255, 0, 255, 0, 255, 0, 0, 0, 0, 255},
+				{255, 255, 0, 0, 255, 255, 0, 0, 0, 0, 0, 255},
+				{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}
+				
+		};
+		/*
+		for (int i = 0; i < img.length; i++) {
+			for (int j = 0; j < img[0].length; j++) {
+				if(img[i][j] == 255){
+					System.out.print("0  ");
+				}
+				else{
+					System.out.print("1  ");
+				}
+			}
+			System.out.println();
+		}
+		
+		System.out.println("");
+		*/
+		double[][] ret = PDI.globalBinarization(img,0);
+		/*
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				if(ret[i][j] == 255){
+					System.out.print("0  ");
+				}
+				else{
+					System.out.print("1  ");
+				}
+			}
+			System.out.println();
+		}
+		*/
+		
+		
 	}
 	
 	public static void gatos(){
