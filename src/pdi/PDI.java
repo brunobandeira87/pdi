@@ -966,11 +966,149 @@ public class PDI {
 		return ret;
 	}
 	
+	/**
+	 * Zhang Suen skeletization's method
+	 * @param image
+	 * @return
+	 */
 	
 	public static double[][] skeleton(double[][] image){
 		//TODO : Implementar a esqueletização
+		boolean hasFoundPixel;
+		double[][] tmp = new double[image.length][image[0].length];
+		double[][] img = transformImageForSkeletization(image);;
+		//double[][] ret = new double[image.length][image[0].length];
+		//double[][] slidingWindow = new double[3][3];
+		
+		System.out.println("Skeletization has begun! " + printTime());
+		do{
+			hasFoundPixel = false;
+			
+		
+			//step 1
+			for (int i = 1; i < img.length - 1; i++) {
+				for (int j = 1; j < img[0].length - 1; j++) {
+					double p1 = img[i][j]; double p2 = img[i-1][j]; double p3 = img[i-1][j+1];
+					double p4 = img[i][j+1]; double p5 = img[i+1][j+1]; double p6 = img[i+1][j];
+					double p7 = img[i+1][j-1]; double p8 = img[i][j-1]; double p9 = img[i-1][j-1];
+					double sum = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+					
+					// verifica se p1 é um border pixel 
+					
+					if(p1 == 1 && (sum >= 2 && sum <= 6) && countNumberOfTransition(p2, p3, p4, p5, p6, p7, p8, p9) == 1 &&
+							p2 * p4 * p6 == 0 && p4 * p6 * p8 == 0){
+						
+						tmp[i][j] = -1;
+						hasFoundPixel = true;
+					}
+					else{
+						tmp[i][j] = p1;
+					}
+				}
+			}
+			//transforming all those pixels which have been marked 
+			for (int i = 1; i < tmp.length - 1; i++) {
+				for (int j = 1; j < tmp[0].length - 1; j++) {
+					if(tmp[i][j] == -1){
+						tmp[i][j] = 0;
+					}
+				}
+			}
+			
+			img = tmp.clone();
+			
+			//step 2
+			
+			for (int i = 1; i < img.length-1; i++) {
+				for (int j = 1; j < img[0].length-1; j++) {
+					double p1 = img[i][j]; double p2 = img[i-1][j]; double p3 = img[i-1][j+1];
+					double p4 = img[i][j+1]; double p5 = img[i+1][j+1]; double p6 = img[i+1][j];
+					double p7 = img[i+1][j-1]; double p8 = img[i][j-1]; double p9 = img[i-1][j-1];
+					double sum = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+					
+					if(p1 == 1 && (sum >= 2 && sum <= 6) && countNumberOfTransition(p2, p3, p4, p5, p6, p7, p8, p9) == 1 &&
+							p2 * p4 * p8 == 0 && p2 * p6 * p8 == 0){
+						
+						tmp[i][j] = -1;
+						hasFoundPixel = true;
+					}
+					else{
+						tmp[i][j] = p1;
+					}
+					
+				}
+			}
+			//transforming all those pixels which have been marked 
+			for (int i = 1; i < tmp.length - 1; i++) {
+				for (int j = 1; j < tmp[0].length - 1; j++) {
+					if(tmp[i][j] == -1){
+						tmp[i][j] = 0;
+					}
+				}
+			}
+			
+			img = tmp.clone();
+		
+		}while(hasFoundPixel);
+		
+		
+		
+		double[][] ret = grayScale(tmp);
+		System.out.println("Skeletization has finished! " + printTime());
+		return ret;
+	}
+	
+	
+	private static double[][] grayScale(double[][] image){
+		double foreground = 0;
+		double background = 255;
 		
 		double[][] ret = new double[image.length][image[0].length];
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				ret[i][j] = (image[i][j] == 0) ? background: foreground;
+			}
+		}
+		
+		return ret;
+				
+	}
+	
+	private static int countNumberOfTransition(double p2, double p3, double p4, double p5, double p6, double p7, double p8, double p9){
+		int ret = 0;
+		
+		if(p2 == 0 && p3 == 1)
+			ret++;
+		if(p3 == 0 && p4 == 1)
+			ret++;
+		if(p4 == 0 && p5 == 1)
+			ret++;
+		if(p5 == 0 && p6 == 1)
+			ret++;
+		if(p6 == 0 && p7 == 1)
+			ret++;
+		if(p7 == 0 && p8 == 1)
+			ret++;
+		if(p8 == 0 && p9 == 1)
+			ret++;
+		
+		return ret;
+	}
+	
+	private static double[][] transformImageForSkeletization(double[][] image){
+		double[][] ret = new double[image.length][image[0].length];
+		double background = 0;
+		double foreground = 1;
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				ret[i][j] = (image[i][j] == 255) ? background : foreground; 
+			}
+		}
+		
+		
+		
+		
 		return ret;
 	}
 

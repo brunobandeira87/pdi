@@ -14,7 +14,7 @@ public class PDITeste {
 	public static void main(String[] args) {	
 		ourAlgorithm();
 		//f();
-		
+		//e();
 		
 	
 		
@@ -61,6 +61,9 @@ public class PDITeste {
 			
 			double[][] label = PDI.globalBinarization(otsu, radius);
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_label_" + OUTPUTEXT,label);
+			
+			double[][] skeleton = PDI.skeleton(label);
+			PDI.salvaImagem(PATH + IMAGES[i] + "_skeleton" + OUTPUTEXT,skeleton);
 			//break;
 			
 			
@@ -78,6 +81,53 @@ public class PDITeste {
 			//PDI.salvaImagem(PATH + IMAGES[i] + "_niblack15" + OUTPUTEXT, PDI.niblackMethod(cinza, 15));
 			
 		}
+	}
+	
+	
+	public static void e(){
+		
+		
+		double[][] img = {
+				
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,1,1,1,0,0,1,1,1,1,1,1,1,1,0,0,1,1,1,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+				
+		};
+		
+		for (int i = 0; i < img.length; i++) {
+			for (int j = 0; j < img[0].length; j++) {
+				if(img[i][j] == 1){
+					System.out.print("#");
+				}
+				else{
+					System.out.print((int)img[i][j]);
+				}
+			}
+			System.out.println();
+		}
+		System.out.println();
+		double[][] ret = PDI.skeleton(img);
+		
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				if(ret[i][j] == 1){
+					System.out.print("#");
+				}
+				else{
+					System.out.print((int)ret[i][j]);
+				}
+			}
+			System.out.println();
+		}
+		
 	}
 	
 	
