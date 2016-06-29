@@ -1105,10 +1105,6 @@ public class PDI {
 				ret[i][j] = (image[i][j] == 255) ? background : foreground; 
 			}
 		}
-		
-		
-		
-		
 		return ret;
 	}
 
@@ -1123,5 +1119,92 @@ public class PDI {
 		return ret; // 2014/08/06 15:59:48
 	}
 	
+//	public static double[][] erode(double[][] image, int maskRadius) {
+//		double[][] erodedImage = new double[image.length][image[0].length];
+//		
+//		double[][] se = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+//
+//		for (int i = 1; i < image.length - 1; i++) {
+//			for (int j = 1; j < image[0].length - 1; j++) {
+//				if (image[i - 1][j] == se[0][1]
+//						&& image[i - 1][j - 1] == se[0][0]
+//						&& image[i - 1][j + 1] == se[1][1]
+//						&& image[i][j - 1] == se[1][0]
+//						&& image[i][j] == se[1][1]
+//						&& image[i][j + 1] == se[0][2]
+//						&& image[i + 1][j - 1] == se[2][0]
+//						&& image[i + 1][j + 1] == se[2][2]
+//						&& image[i + 1][j] == se[2][1]
+//
+//				) {
+//					erodedImage[i][j] = 0;
+////					erodedImage[i][j-1] = 255;
+////					erodedImage[i][j+1] = 255;
+////					erodedImage[i - 1][j] = 255;
+////					erodedImage[i - 1][j-1] = 255;
+////					erodedImage[i + 1][j] = 255;
+////					erodedImage[i + 1][j-1] = 255;
+////					erodedImage[i - 1][j+1] = 255;
+////					erodedImage[i + 1][j + 1] = 255;
+//				} else {
+//					erodedImage[i][j] = 255;
+//				}
+//			}
+//		}
+//		return erodedImage;
+//	}
 
+	public static double[][] erode(double[][] image, int maskRadius) {
+		double[][] erodedImage = image.clone();
+		int windowSize = maskRadius * 2 + 1;
+		double[][] mask = new double[windowSize][windowSize];
+		for(int i = maskRadius; i < image.length - maskRadius; i++) {
+			for(int j = maskRadius; j < image[0].length - maskRadius; j++) {
+				double[][] window = getWindow(image, i, j, maskRadius);
+				if(checkImageEquality(mask, window)) {
+					erodedImage[i][j] = 0;
+				}
+			}
+		}
+		return erodedImage;
+	}
+	
+	private static double[][] removeWindowLeavingPixel(double[][] image, int x, int y, double[][] window, int maskRadius) {
+		double[][] returnedImage = image.clone();
+		for(int i = x - maskRadius; i < x + maskRadius; i++) {
+			for(int j = x - maskRadius; j < y + maskRadius; j++) {
+				if(x == maskRadius && y == maskRadius) {
+					returnedImage[i][j] = 0;
+				} else {
+					returnedImage[i][j] = 255;
+				}
+			}	
+		}
+		return returnedImage;
+	}
+	
+	public static boolean checkImageEquality(double[][] image1, double[][] image2) {
+		if(image1.length != image2.length || image1[0].length != image2.length) {
+			return false;
+		}
+		for(int i = 0; i < image1.length; i++) {
+			for(int j = 0; j < image1[0].length; j++) {
+				if(image1[i][j] != image2[i][j]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	private static double[][] getWindow(double[][] image, int x, int y, int windowRadius) {
+		int windowSize = windowRadius*2 + 1;
+		double[][] window = new double[windowSize][windowSize];
+		for(int i = x - windowRadius, indexX = 0; i < x + windowRadius; i++, indexX++) {
+			for(int j = y - windowRadius, indexY = 0; j < y + windowRadius; j++, indexY++) {
+				window[indexX][indexY] = image[i][j];
+			}
+		}
+		return window;
+	}
 }

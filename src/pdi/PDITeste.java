@@ -1,22 +1,20 @@
 package pdi;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class PDITeste {
 
-	public static String PATH = "/home/bandeira/Documents/university/2016.1/pdi/workspace/DocumentBinary/src/images/";
-//	public static String PATH = "/Users/Vinicius/Documents/workspace/pdi/src/images/";
+//	public static String PATH = "/home/bandeira/Documents/university/2016.1/pdi/workspace/DocumentBinary/src/images/";
+	public static String PATH = "/Users/Vinicius/Documents/workspace/pdi/src/images/";
 	public static String INPUTEXT = ".png";
 	public static String OUTPUTEXT = ".jpg";
 	public static String[] IMAGES = {"H01", "H02","H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10" };
-//	public static String[] IMAGES = {"H01"};
+//	public static String[] IMAGES = {"H07"};
 	
 	public static void main(String[] args) {	
-		ourAlgorithm();
+//		ourAlgorithm();
 		//f();
 		//e();
 		
-	
+		testAlgorithm();
 		
 //		gatos();
 		//freak();
@@ -31,7 +29,54 @@ public class PDITeste {
 		}
 	}
 	
-
+	public static void testAlgorithm() {
+		for (int i = 0; i < IMAGES.length; i++) {
+			System.out.println("IMAGE: " + IMAGES[i]);
+			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
+			double[][] cinza = PDI.retornaImagemCinza(colorida);
+			double[][] otsu = PDI.inverse(PDI.otsuMethod(cinza));
+//			PDI.salvaImagem(PATH + IMAGES[i] + "_otsu_not_eroded" + OUTPUTEXT,otsu);
+			double[][] erode = PDI.erode(otsu, 1);
+			erode = PDI.dilatation(erode);
+			double[][] background = PDI.inpainting(cinza, erode);
+			
+			//ŧerceiro passo - normalization between original and background inpainting
+			double[][] normal = PDI.imageNormalization(cinza, background);
+			double[][] ot = PDI.otsuMethod(normal);
+			double[][] label = PDI.globalBinarization(ot, 5);
+			
+			PDI.salvaImagem(PATH + IMAGES[i] + "_eroded" + OUTPUTEXT,label);
+			
+//			double[][] background;
+//			int radius = 30;
+//			double kt = -0.2;
+//			//primeiro passo - niblack
+//			double[][] niblack = PDI.niblackMethod(cinza, radius, kt, false);
+//			PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
+//			//double[][] niblack = PDI.otsuMethod(cinza);
+//			niblack = PDI.dilatation(niblack);
+////			niblack = PDI.erode(niblack, 1);
+//				
+//			//segundo passo - background estimation inpainting method
+//			background = PDI.inpainting(cinza, niblack);
+//			
+//			//ŧerceiro passo - normalization between original and background inpainting
+//			double[][] normal = PDI.imageNormalization(cinza, background);
+//			
+//			//quarto passo - otsu on normalized image
+//			double[][] otsu = PDI.otsuMethod(normal);
+//			
+//			PDI.salvaImagem(PATH + IMAGES[i] + "_final_otsu_" + OUTPUTEXT,otsu);
+//			
+//			double[][] label = PDI.globalBinarization(otsu, radius);
+//			PDI.salvaImagem(PATH + IMAGES[i] + "_final_label_" + OUTPUTEXT,label);
+//			
+//			double[][] skeleton = PDI.skeleton(label);
+//			PDI.salvaImagem(PATH + IMAGES[i] + "_skeleton" + OUTPUTEXT,skeleton);
+//			//break;
+			
+		}	
+	}
 	
 	public static void ourAlgorithm(){
 		for (int i = 0; i < IMAGES.length; i++) {
@@ -46,7 +91,6 @@ public class PDITeste {
 			PDI.salvaImagem(PATH + IMAGES[i] + "_bn" + OUTPUTEXT,niblack);
 			//double[][] niblack = PDI.otsuMethod(cinza);
 			niblack = PDI.dilatation(niblack);
-			
 				
 			//segundo passo - background estimation inpainting method
 			background = PDI.inpainting(cinza, niblack);
@@ -65,8 +109,6 @@ public class PDITeste {
 			double[][] skeleton = PDI.skeleton(label);
 			PDI.salvaImagem(PATH + IMAGES[i] + "_skeleton" + OUTPUTEXT,skeleton);
 			//break;
-			
-			
 			
 			//PDI.salvaImagem(PATH + IMAGES[i] +"_laplacean" + OUTPUTEXT,PDI.laplacean(PDI.lerImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT)));
 			/*
