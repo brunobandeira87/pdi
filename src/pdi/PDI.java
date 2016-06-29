@@ -22,7 +22,7 @@ public class PDI {
 	 * BEGIN OF READ IMAGE FILE
 	 */
 	
-	private static LookupTable table = new LookupTable();
+	private static LookupTable HEIGHT_TABLE = new LookupTable();
 
 	public static double[][] lerImagem(String caminho) throws RuntimeException {
 		File f = new File(caminho);
@@ -391,15 +391,9 @@ public class PDI {
 		double min = 0.0;
 		double max = 255.0;
 		double[][] ret = new double[image.length][image[0].length];
-		for (int i = 0; i < ret.length; i++) {
-			for (int j = 0; j < ret.length; j++) {
-				if (image[i][j] == min || image[i][j] == max) {
-					ret[i][j] = (image[i][j] == min) ? 0 : 1;
-
-				} else {
-					System.out.println("ops, galera! ");
-				}
-
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {				
+					ret[i][j] = (image[i][j] == max) ? 0 : 1;
 			}
 		}
 		return ret;
@@ -428,7 +422,7 @@ public class PDI {
 					continue;
 				}
 				//ret[i][j] = table.getHeightByLabel((table.getAssociatedValue(image[i][j]))) >= threshold) ? 255 : 0;
-				ret[i][j] = table.getHeightByLabel(table.getAssociatedValue(image[i][j])) >= threshold ? 255 : 0;
+				ret[i][j] = HEIGHT_TABLE.getMeasureByLabel(HEIGHT_TABLE.getAssociatedValue(image[i][j])) >= threshold ? 255 : 0;
 			}
 		}
 
@@ -758,14 +752,12 @@ public class PDI {
 	public static double[][] globalBinarization(double[][] image, int radius) {
 		double[][] ret = new double[image.length][image[0].length];
 		System.out.println("Global Binarization has begun!  " + printTime());
-		int[][] temp = assignLabels(image, radius);
+		int[][] temp = assignLabels(image, radius);	
 		
-	
+		int Measure = getBestMeasure(temp);
 		
-		int height = getBestHeight(temp);
-		
-		System.out.println("height: " + height);
-		ret = inverse(threshImage(temp, height));
+		System.out.println("Measure: " + Measure);
+		ret = inverse(threshImage(temp, Measure));
 		
 		System.out.println("Global Binarization has finished!  " + printTime());
 		return ret;
@@ -780,17 +772,14 @@ public class PDI {
 	private static int[][] assignLabels(double[][] image, int radius){
 		int[][] ret = new int[image.length][image[0].length];
 		int bg = -1;
-		int label = 1;
-		
+		int label = 1;		
 		
 		for (int i = 0; i < image.length; i++) {
 			for (int j = 0; j < image[0].length; j++) {
 				if(image[i][j] == 255){
 					image[i][j] = bg;
-				}
-				
-				ret[i][j] = (int)image[i][j];
-				
+				}				
+				ret[i][j] = (int)image[i][j];				
 			}
 		}
 		
@@ -805,7 +794,7 @@ public class PDI {
 				else{
 					// pixel à esquerda e a acima são bg, pixel central ganha label
 					if(ret[i-1][j] == bg && ret[i][j-1] == bg){
-						table.addRelation(label,label);
+						HEIGHT_TABLE.addRelation(label,label);
 						ret[i][j] = label++;
 					}
 					//pixel a esquerda já esta marcado, então pixel central recebe o valor do label do pixel da esquerda
@@ -817,7 +806,7 @@ public class PDI {
 					}
 					else if(ret[i][j-1] != bg && ret[i-1][j] != bg){
 						if(ret[i][j-1] != ret[i-1][j]){
-							table.addRelation(ret[i][j-1], ret[i-1][j]);
+							HEIGHT_TABLE.addRelation(ret[i][j-1], ret[i-1][j]);
 						}
 						
 						ret[i][j] = ret[i-1][j];
@@ -844,12 +833,12 @@ public class PDI {
 		System.out.println();
 		 */
 		// label = quantidade de subconjuntos
-		table.map(label);
+		HEIGHT_TABLE.map(label);
 		// segundo passo, reduzir a quantidade de labels
-		//System.out.println(table.getReducedTableSize());
+		//System.out.println(HEIGHT_TABLE.getReducedHEIGHT_TABLESize());
 		for (int i = 0; i < ret.length; i++) {
 			for (int j = 0; j < ret[0].length; j++) {				
-				ret[i][j] = (ret[i][j] != bg && ret[i][j] != 0) ? table.getAssociatedValue(ret[i][j]) : 0;	
+				ret[i][j] = (ret[i][j] != bg && ret[i][j] != 0) ? HEIGHT_TABLE.getAssociatedValue(ret[i][j]) : 0;	
 			}
 		}
 		/*
@@ -869,8 +858,8 @@ public class PDI {
 		 */
 		
 		// Metodo pra calcular a altura de cada Label 
-		table.associateLabelWithHeight(ret);
-		table.calculateNumberOfForeGroundPixel(ret, radius);
+		HEIGHT_TABLE.associateLabelWithMeasure(ret);
+		HEIGHT_TABLE.calculateNumberOfForeGroundPixel(ret, radius);
 		return ret;
 	}
 	
@@ -886,8 +875,8 @@ public class PDI {
 		
 		for (int i = 0; i < image.length; i++) {
 			for (int j = 0; j < image[0].length; j++) {
-				int temp = table.getAssociatedValue(image[i][j]);
-				if(temp > 0 && table.getHeightByLabel(temp) == altura){
+				int temp = HEIGHT_TABLE.getAssociatedValue(image[i][j]);
+				if(temp > 0 && HEIGHT_TABLE.getMeasureByLabel(temp) == altura){
 					count++;
 				}
 			}
@@ -898,7 +887,7 @@ public class PDI {
 	}
 	
 	
-	private static int getBestHeight(int[][] image){
+	private static int getBestMeasure(int[][] image){
 		// o algoritmo diz pra iniciar a altura = 1 
 		int ret = 1;
 		double razaoRP = 0;
@@ -914,14 +903,14 @@ public class PDI {
 
 	private static double razaoRP(int[][] image, int altura) {
 		int countConnected = countConnected(image, altura);
-		int count1Geral = table.getNumberOfConnectedPixels();		
+		int count1Geral = HEIGHT_TABLE.getNumberOfConnectedPixels();		
 		double ret = (double) countConnected / (count1Geral);
 		return ret;
 	}
 
 	private static double razaoRC(int altura) {		
-		int ncj = table.getNumberOfLabeledByHeight(altura);
-		int nco = table.getReducedTableSize();		
+		int ncj = HEIGHT_TABLE.getNumberOfLabeledByMeasure(altura);
+		int nco = HEIGHT_TABLE.getReducedTableSize();		
 		double ret = ((double)ncj / nco) ;		
 		return ret;
 	}
@@ -976,7 +965,7 @@ public class PDI {
 		//TODO : Implementar a esqueletização
 		boolean hasFoundPixel;
 		double[][] tmp = new double[image.length][image[0].length];
-		double[][] img = transformImageForSkeletization(image);;
+		double[][] img = binaryImage(image);;
 		//double[][] ret = new double[image.length][image[0].length];
 		//double[][] slidingWindow = new double[3][3];
 		
@@ -1096,21 +1085,55 @@ public class PDI {
 		return ret;
 	}
 	
-	private static double[][] transformImageForSkeletization(double[][] image){
-		double[][] ret = new double[image.length][image[0].length];
-		double background = 0;
-		double foreground = 1;
-		for (int i = 0; i < ret.length; i++) {
-			for (int j = 0; j < ret[0].length; j++) {
-				ret[i][j] = (image[i][j] == 255) ? background : foreground; 
+	
+	
+	public static double strokeWidth(double[][] skeleton, double[][] contour){
+		//TODO: Implementar o Stroke Width
+		
+		double ret = 0;
+		
+		for (int i = 0; i < skeleton.length; i++) {
+			for (int j = 0; j < skeleton[0].length; j++) {
+				if(skeleton[i][j] == 1){
+					
+				}
 			}
 		}
 		
+		return ret;
+	}
+	
+	
+	
+	public static double[][] contour(double[][] image){
+		//TODO: Implementar algorimto de contorno
+		image = binaryImage(image);
+		double[][] ret = new double[image.length][image[0].length];
 		
-		
+		for (int i = 1; i < image.length-1; i++) {
+			for (int j = 1; j < image[0].length-1; j++) {
+				if(image[i][j] == 1 &&
+					(image[i-1][j-1] == 0 || image[i-1][j] == 0 || image[i-1][j+1] == 0 ||
+					 image[i][j-1]   == 0 || image[i][j]   == 0 || image[i][j+1]   == 0 || 
+					 image[i+1][j+1] == 0 || image[i+1][j] == 0 || image[i+1][j+1] == 0 )){
+					
+					//marcado como contorno, usando 8-vizinhanca
+					ret[i][j] = -1;  
+					
+					
+				}
+				else{
+					ret[i][j] = image[i][j];
+				}
+						
+				
+			}
+		}
 		
 		return ret;
 	}
+	
+	
 
 	/*
 	 * BEGIN OF UTILS FUNCTIONS

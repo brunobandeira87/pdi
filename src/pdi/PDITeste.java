@@ -13,13 +13,7 @@ public class PDITeste {
 	
 	public static void main(String[] args) {	
 		ourAlgorithm();
-		//f();
-		//e();
 		
-	
-		
-//		gatos();
-		//freak();
 	}
 	
 	public static void onlyOtsu(){
@@ -63,7 +57,42 @@ public class PDITeste {
 			PDI.salvaImagem(PATH + IMAGES[i] + "_final_label_" + OUTPUTEXT,label);
 			
 			double[][] skeleton = PDI.skeleton(label);
+			
+			double[][] contour = PDI.contour(label);
+			PDI.strokeWidth(skeleton, contour);
+			
 			PDI.salvaImagem(PATH + IMAGES[i] + "_skeleton" + OUTPUTEXT,skeleton);
+			//break;
+			
+			
+			
+			//PDI.salvaImagem(PATH + IMAGES[i] +"_laplacean" + OUTPUTEXT,PDI.laplacean(PDI.lerImagem(PATH + IMAGES[i] + "_final_otsu" + OUTPUTEXT)));
+			/*
+			//double[][] gray = PDI.lerImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT);//dilatation
+			//PDI.salvaImagem(PATH + IMAGES[i] + "_di21" + OUTPUTEXT, PDI.inverse(PDI.dilatation(gray)));
+			/*
+			PDI.salvaImagem(PATH + IMAGES[i] + "_gray" + OUTPUTEXT,(cinza));
+			PDI.salvaImagem(PATH + IMAGES[i] + "_otsu" + OUTPUTEXT,(cinza));
+			PDI.salvaImagem(PATH + IMAGES[i] + "_his" + OUTPUTEXT,PDI.histogramEqualization(cinza));			
+			PDI.salvaImagem(PATH + IMAGES[i] + "_inv" + OUTPUTEXT,PDI.niblackMethod(cinza, 30, true));
+			*/
+			//PDI.salvaImagem(PATH + IMAGES[i] + "_niblack15" + OUTPUTEXT, PDI.niblackMethod(cinza, 15));
+			
+		}
+	}
+	
+	public static void other(){
+		for (int i = 0; i < IMAGES.length; i++) {
+			System.out.println("IMAGE: " + IMAGES[i]);
+			double[][][] colorida = PDI.lerImagemColorida(PATH + IMAGES[i] + INPUTEXT);
+			double[][] cinza = PDI.retornaImagemCinza(colorida);
+			double[][] background;
+			
+			double[][] otsu = PDI.inverse(PDI.otsuMethod(cinza));
+			double[][] dilation = PDI.dilatation(otsu);
+			double[][] skeleton = (PDI.dilatation(PDI.skeleton(dilation)));
+			PDI.salvaImagem(PATH + IMAGES[i] + "_other" + OUTPUTEXT,(skeleton));
+			
 			//break;
 			
 			
@@ -123,6 +152,75 @@ public class PDITeste {
 				}
 				else{
 					System.out.print((int)ret[i][j]);
+				}
+			}
+			System.out.println();
+		}
+		
+	}
+	
+	
+	public static void eur(){
+		final LookupTable table;
+		double[][] image = {
+				
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,0,0},
+				{0,1,1,1,0,0,1,1,1,1,0,0,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,0,0},
+				{0,1,1,1,0,0,0,1,1,1,1,0,1,1,1,0,0,1,1,1,1,1,1,1,1,0,0,1,1,1,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+				
+		};
+		
+		
+		double[][] ret = new double[image.length][image[0].length];
+		
+		
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				if(image[i][j] == 1){
+					System.out.print("#");
+				}
+				else{
+					System.out.print(" ");
+				}
+			}
+			System.out.println();
+		}
+		
+		System.out.println();
+		for (int i = 1; i < image.length-1; i++) {
+			for (int j = 1; j < image[0].length-1; j++) {
+				if(image[i][j] == 1 &&
+					(image[i-1][j-1] == 0 || image[i-1][j] == 0 || image[i-1][j+1] == 0 ||
+					 image[i][j-1]   == 0 || image[i][j]   == 0 || image[i][j+1]   == 0 || 
+					 image[i+1][j+1] == 0 || image[i+1][j] == 0 || image[i+1][j+1] == 0 )){
+					
+					//marcado como contorno
+					ret[i][j] = -1;  
+					
+					
+				}
+				else{
+					ret[i][j] = image[i][j];
+				}
+						
+				
+			}
+		}
+		
+		for (int i = 0; i < ret.length; i++) {
+			for (int j = 0; j < ret[0].length; j++) {
+				if(ret[i][j] == -1){
+					System.out.print("#");
+				}
+				else{
+					System.out.print(" ");
 				}
 			}
 			System.out.println();

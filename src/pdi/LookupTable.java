@@ -8,7 +8,7 @@ public class LookupTable {
 
 	private List<Label> labels;
 	private int[] reducedTable;
-	private int[] labelHeight;
+	private int[] labelMeasure;
 	private int numberOfConnectedPixels;
 
 
@@ -43,12 +43,12 @@ public class LookupTable {
 		return ret;
 	}
 	
-	public int getHeightByLabel(int label){
-		return this.labelHeight[label];
+	public int getMeasureByLabel(int label){
+		return this.labelMeasure[label];
 	}
 	
-	public int getLabelHeightSize(){
-		return this.labelHeight.length;
+	public int getLabelMeasureSize(){
+		return this.labelMeasure.length;
 	}
 	
 	/**
@@ -113,7 +113,7 @@ public class LookupTable {
 		}
 		
 		//this.reducedTable = allLabels;
-		this.labelHeight = new int[maximumLabel];
+		this.labelMeasure = new int[maximumLabel];
 		
 		
 	}
@@ -133,15 +133,15 @@ public class LookupTable {
 	}
 	
 	
-	public void associateLabelWithHeight(int[][] image){
+	public void associateLabelWithMeasure(int[][] image){
 		for (int i = 1; i < reducedTable.length - 1; i++) {
-			if(this.reducedTable[i] != i && i < labelHeight.length){
-				//this.labelHeight[i] = this.labelHeight[this.reducedTable[i]];
+			if(this.reducedTable[i] != i && i < labelMeasure.length){
+				//this.labelMeasure[i] = this.labelMeasure[this.reducedTable[i]];
 				// atribuindo -1 pois na hora da contagem não haver repetição
-				this.labelHeight[i] = -1;
+				this.labelMeasure[i] = -1;
 				continue;
 			}
-			else if(i >= labelHeight.length){
+			else if(i >= labelMeasure.length){
 				break;
 			}
 			int maxY = Integer.MIN_VALUE;
@@ -160,9 +160,9 @@ public class LookupTable {
 				
 			}
 			
-			this.labelHeight[i] = maxY - minY;
+			this.labelMeasure[i] = maxY - minY;
 			
-			//System.out.println(i + " -> " +  this.labelHeight[i]);
+			//System.out.println(i + " -> " +  this.labelMeasure[i]);
 		}
 		
 	}
@@ -222,11 +222,11 @@ public class LookupTable {
 
 	
 	
-	public int getNumberOfLabeledByHeight(int height){
+	public int getNumberOfLabeledByMeasure(int measure){
 		int ret = 0;
 		
-		for (int i = 1; i < labelHeight.length; i++) {
-			if(labelHeight[i] == height)
+		for (int i = 1; i < labelMeasure.length; i++) {
+			if(labelMeasure[i] == measure)
 				ret++;
 		}
 		
