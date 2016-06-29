@@ -634,7 +634,7 @@ public class PDI {
 		}
 		System.out.println("Niblack has finished! Radius: " + radius + " "
 				+ printTime());
-		printTime();
+		//printTime();
 		return ret;
 	}
 
@@ -664,8 +664,39 @@ public class PDI {
 		return ret;
 	}
 
-	public static double[][] savoula(double[][] image) {
+	public static double[][] savoula(double[][] image, int radius) {
+		
 		double[][] ret = new double[image.length][image[0].length];
+		double kt = 0.5;
+		double r = 128;		
+		double max = 255;
+		double min = 0;
+		double[][] window = new double[2 * radius + 1][2 * radius + 1];
+		System.out.println("Savoula has begun! "+ printTime());
+		
+		for (int i = radius; i < image.length - radius; i++) {
+			for (int j = radius; j < image[0].length - radius; j++) {								
+				for (int k = 0; k < window.length; k++) {
+					for (int l = 0; l < window[0].length; l++) {
+						if (k + i < image.length - radius && l + j < image[0].length - radius){
+							window[k][l] = image[k + i][l + j];							
+						}						
+					}
+					
+				}
+				double avg = getAvarage(window);				
+				double desvio = getDesvioPadrao(window, avg);
+				//double threshold = avg + kt * desvio;
+				double threshold = avg * ( 1 + kt * ((desvio/r) - 1) );
+				//System.out.println(threshold + "  " + image[i][j] );
+				
+				ret[i][j] = (image[i][j] >= threshold) ? max : min;
+				
+			}
+			
+
+		}
+		System.out.println("Savoula has finished! "+ printTime());
 		return ret;
 	}
 
@@ -1048,7 +1079,7 @@ public class PDI {
 	}
 	
 	
-	private static double[][] grayScale(double[][] image){
+	public static double[][] fdp(double[][] image){
 		double foreground = 0;
 		double background = 255;
 		
@@ -1056,6 +1087,33 @@ public class PDI {
 		
 		for (int i = 0; i < image.length; i++) {
 			for (int j = 0; j < image[0].length; j++) {
+				//System.out.println(image[i][j]);
+				if(image[i][j] == 0){
+					ret[i][j] = background;
+				}
+				else if(image[i][j] == 1){
+					ret[i][j] = foreground;
+					System.out.println("VAI TOMR NO CU FDP DO CARALHO!");
+				}
+				else{
+					System.out.println("hauehua!");
+				}
+				
+			}
+		}
+		
+		return ret;
+	}
+	
+	public static double[][] grayScale(double[][] image){
+		double foreground = 0;
+		double background = 255;
+		
+		double[][] ret = new double[image.length][image[0].length];
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < image[0].length; j++) {
+				//System.out.println(image[i][j]);
 				ret[i][j] = (image[i][j] == 0) ? background: foreground;
 			}
 		}
@@ -1133,13 +1191,152 @@ public class PDI {
 		return ret;
 	}
 	
+	public static double[][] erode(double[][] image, int maskRadius) {
+		double[][] erodedImage = image.clone();
+		int windowSize = maskRadius * 2 + 1;
+		double[][] mask = new double[windowSize][windowSize];
+		for(int i = maskRadius; i < image.length - maskRadius; i++) {
+			for(int j = maskRadius; j < image[0].length - maskRadius; j++) {
+				double[][] window = getWindow(image, i, j, maskRadius);
+				if(checkImageEquality(mask, window)) {
+					erodedImage[i][j] = 0;
+				}
+			}
+		}
+		return erodedImage;
+	}
+	
+	private static double[][] removeWindowLeavingPixel(double[][] image, int x, int y, double[][] window, int maskRadius) {
+		double[][] returnedImage = image.clone();
+		for(int i = x - maskRadius; i < x + maskRadius; i++) {
+			for(int j = x - maskRadius; j < y + maskRadius; j++) {
+				if(x == maskRadius && y == maskRadius) {
+					returnedImage[i][j] = 0;
+				} else {
+					returnedImage[i][j] = 255;
+				}
+			}	
+		}
+		return returnedImage;
+	}
+	
+	public static boolean checkImageEquality(double[][] image1, double[][] image2) {
+		if(image1.length != image2.length || image1[0].length != image2.length) {
+			return false;
+		}
+		for(int i = 0; i < image1.length; i++) {
+			for(int j = 0; j < image1[0].length; j++) {
+				if(image1[i][j] != image2[i][j]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	private static double[][] getWindow(double[][] image, int x, int y, int windowRadius) {
+		int windowSize = windowRadius*2 + 1;
+		double[][] window = new double[windowSize][windowSize];
+		for(int i = x - windowRadius, indexX = 0; i < x + windowRadius; i++, indexX++) {
+			for(int j = y - windowRadius, indexY = 0; j < y + windowRadius; j++, indexY++) {
+				window[indexX][indexY] = image[i][j];
+			}
+		}
+		return window;
+	}
+	
+	
+	private static double[][] movelAverageCalculation(double[][] image, int radius){
+		double[][] ret = new double[image.length][image[0].length];
+		
+
+		for (int i = 0; i < image.length; i++) {
+			double acc = 0;
+			for (int j = 0; j < image[0].length; j++) {
+				
+				if(j < radius - 1){
+					ret[i][j] = image[i][j];
+				}
+				
+				else{
+					if( j == radius - 1){
+						for (int j2 = j; j2 >= 0; j2--) {
+							acc += image[i][j2];
+						}
+					}
+					else{
+						acc += image[i][j];
+						acc -= image[i][j-radius];
+					}
+					//System.out.println(acc/radius);
+					ret[i][j] = (image[i][j] > (acc)/radius) ? 1 : 0;
+					//System.out.println(ret[i][j]);
+					
+				}
+			}
+		}
+		
+		
+		return ret;
+	}
+	
+	
+	public static double[][] movelAverage(double[][] image, int radius){
+		System.out.println("begin");
+		double[][] ret = new double[image.length][image[0].length];
+		double[][] otsu = inverse(otsuMethod(image));
+		double[][] aux = new double[image.length][radius];
+		double[][] temp = new double[image.length][radius];
+		/*
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < radius - 1; j++) {
+				 temp[i][j] = image[i][j];
+			}
+		}
+		*/
+		int tempRadius = radius;
+		
+		while(tempRadius > 0) {
+			
+			double[][] km = movelAverageCalculation(temp, tempRadius);
+			//System.out.println(aux[0].length);
+			for (int i = 0; i < km.length; i++) {
+				for (int j = 0; j < km[0].length; j++) {
+					aux[i][j] = km[i][j];
+				}
+			}
+			
+			tempRadius /= 2;
+		}
+		
+		
+		
+		for (int i = 0; i < image.length; i++) {
+			for (int j = 0; j < radius - 1; j++) {
+				 ret[i][j] = otsu[i][j];
+			}
+		}
+		
+		temp = movelAverageCalculation(image, radius);
+		
+		for (int i = 0; i < temp.length; i++) {
+			for (int j = radius - 1; j < temp[0].length; j++) {
+				ret[i][j] = temp[i][j];
+			}
+		}
+		
+		ret = grayScale(ret);
+		System.out.println("end");
+		return inverse(ret);
+		
+	}
 	
 
 	/*
 	 * BEGIN OF UTILS FUNCTIONS
 	 */
 
-	private static String printTime() {
+	public static String printTime() {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		String ret = "[ " + (dateFormat.format(date)) +  " ]"; 
